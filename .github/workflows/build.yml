@@ -1,19 +1,32 @@
 name: Build Windows EXE
-on: [workflow_dispatch]  # 手动触发编译
+on: [workflow_dispatch]
 
 jobs:
   build:
-    runs-on: windows-latest  # 使用Windows编译环境
+    runs-on: windows-latest
+    permissions:  # 新增权限配置
+      actions: write
+      contents: read
+      
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Setup MSVC
+      uses: ilammy/msvc-dev-cmd@v1  # 添加MSVC环境
+
     - name: Compile Program
       run: |
-        g++ -o AutoScroll.exe autoscroll.cpp -luser32 -lgdi32 -mwindows
+        cl -Fe:AutoScroll.exe autoscroll.cpp user32.lib gdi32.lib
+        
+    - name: Verify EXE
+      run: dir AutoScroll.exe  # 确认文件存在
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4  # 升级到最新版本
       with:
-        name: AutoScroll.exe
-        path: AutoScroll.exe
+        name: AutoScroll
+        path: |
+          AutoScroll.exe
+          autoscroll.cpp  # 可选：包含源代码
+        retention-days: 1  # 自动清理旧文件
